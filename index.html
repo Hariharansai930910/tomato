@@ -1,0 +1,1754 @@
+solution: `function findItinerary(tickets) {
+    // Build the graph (adjacency list)
+    const graph = {};
+    for (const [from, to] of tickets) {
+        if (!graph[from]) graph[from] = [];
+        graph[from].push(to);
+    }
+    
+    // Sort destinations in lexical order
+    for (const from in graph) {
+        graph[from].sort();
+    }
+    
+    const route = [];
+    
+    function dfs(airport) {
+        const destinations = graph[airport] || [];
+        while (destinations.length > 0) {
+            const nextAirport = destinations.shift();
+            dfs(nextAirport);
+        }
+        route.push(airport);
+    }
+    
+    dfs('JFK');
+    
+    return route.reverse();
+}`,
+                    explanation: "✅ One-liner:\nUse DFS + min-heap to build lexicographically smallest itinerary.\n\n👶 3-liner for kids:\nWe treat each airport as a point.\nWe travel using the smallest possible word (alphabetically).\nWhen all tickets are used, that's our path.\n\n🧠 Mnemonics:\n\n\"Build min-heap graph\" → graph[frm].append(to); heapify\n\n\"DFS visit\" → while graph[airport]: dfs(next_dest)\n\n\"Build itinerary\" → res.appendleft(airport)"
+                },
+                {
+                    id: 3,
+                    title: "Min Cost to Connect All Points",
+                    description: "You are given an array points representing integer coordinates of some points on a 2D-plane, where points[i] = [xi, yi]. The cost of connecting two points [xi, yi] and [xj, yj] is the manhattan distance between them: |xi - xj| + |yi - yj|. Return the minimum cost to make all points connected.",
+                    solution: `function minCostConnectPoints(points) {
+    const n = points.length;
+    
+    // Prim's algorithm
+    let totalCost = 0;
+    const visited = new Set();
+    const distances = new Array(n).fill(Infinity);
+    distances[0] = 0; // Start from first point
+    
+    for (let i = 0; i < n; i++) {
+        // Find the point with minimum distance
+        let minDist = Infinity;
+        let minIndex = -1;
+        
+        for (let j = 0; j < n; j++) {
+            if (!visited.has(j) && distances[j] < minDist) {
+                minDist = distances[j];
+                minIndex = j;
+            }
+        }
+        
+        // Add to MST
+        visited.add(minIndex);
+        totalCost += minDist;
+        
+        // Update distances to remaining points
+        for (let j = 0; j < n; j++) {
+            if (!visited.has(j)) {
+                const cost = Math.abs(points[j][0] - points[minIndex][0]) + 
+                           Math.abs(points[j][1] - points[minIndex][1]);
+                distances[j] = Math.min(distances[j], cost);
+            }
+        }
+    }
+    
+    return totalCost;
+}`,
+                    explanation: "✅ One-liner:\nUse Prim's algorithm (MST) with min-heap for Manhattan distances.\n\n👶 3-liner for kids:\nWe connect all dots with the least total cost.\nWe always choose the shortest connection that's not yet used.\nWhen all points are connected, we stop.\n\n🧠 Mnemonics:\n\n\"Heap init\" → heap = [(0, 0)] (cost, node)\n\n\"Track visited\" → if node not in visited: add to cost\n\n\"Push neighbors\" → for every next_point: heappush with distance"
+                },
+                {
+                    id: 4,
+                    title: "Swim in Rising Water",
+                    description: "On an N x N grid, each square grid[i][j] represents the elevation at that point (i,j). Now rain starts to fall. At time t, the depth of the water everywhere is t. You can swim from a square to another 4-directionally adjacent square if and only if the elevation of both squares individually are at most t. You can swim infinite distance in zero time. Return the least time until you can reach the bottom right square (N-1, N-1) if you start at the top left square (0, 0).",
+                    solution: `function swimInWater(grid) {
+    const n = grid.length;
+    
+    // Priority queue (min heap) for Dijkstra's algorithm
+    const minHeap = [[grid[0][0], 0, 0]];  // [max_height, row, col]
+    const visited = new Set();
+    visited.add(0 + ',' + 0);
+    
+    const directions = [[0, 1], [1, 0], [0, -1], [-1, 0]];
+    
+    while (minHeap.length > 0) {
+        // Get the cell with minimum max height
+        minHeap.sort((a, b) => a[0] - b[0]);
+        const [height, row, col] = minHeap.shift();
+        
+        // If we reached the bottom-right cell, return the height
+        if (row === n - 1 && col === n - 1) {
+            return height;
+        }
+        
+        // Explore all four directions
+        for (const [dr, dc] of directions) {
+            const newRow = row + dr;
+            const newCol = col + dc;
+            const key = newRow + ',' + newCol;
+            
+            // Check boundaries and if not visited
+            if (
+                newRow >= 0 && newRow < n &&
+                newCol >= 0 && newCol < n &&
+                !visited.has(key)
+            ) {
+                visited.add(key);
+                // Max height is the max of current height and new cell's height
+                const newHeight = Math.max(height, grid[newRow][newCol]);
+                minHeap.push([newHeight, newRow, newCol]);
+            }
+        }
+    }
+    
+    return -1; // Should not reach here for valid input
+}`,
+                    explanation: "✅ One-liner:\nUse Dijkstra-style BFS to always swim in the minimum rising level.\n\n👶 3-liner for kids:\nWe treat the grid like a pool filling up.\nWe can only move to spots that are less than or equal to the current water level.\nWe find the smallest max value along the path to the bottom.\n\n🧠 Mnemonics:\n\n\"Heap by elevation\" → heappush(heap, (elevation, r, c))\n\n\"Track max\" → max_time = max(max_time, grid[r][c])\n\n\"Stop at end\" → if r == n-1 and c == n-1: return max_time"
+                }
+            ],
+            
+            // Math & Geometry
+            18: [
+                {
+                    id: 1,
+                    title: "Rotate Image",
+                    description: "You are given an n x n 2D matrix representing an image, rotate the image by 90 degrees (clockwise).",
+                    solution: `function rotate(matrix) {
+    const n = matrix.length;
+    
+    // Transpose the matrix (swap rows with columns)
+    for (let i = 0; i < n; i++) {
+        for (let j = i; j < n; j++) {
+            [matrix[i][j], matrix[j][i]] = [matrix[j][i], matrix[i][j]];
+        }
+    }
+    
+    // Reverse each row
+    for (let i = 0; i < n; i++) {
+        matrix[i].reverse();
+    }
+    
+    // The matrix is rotated in-place
+    return matrix;
+}`,
+                    explanation: "✅ One-liner:\nTranspose the matrix and reverse each row.\n\n👶 3-liner for kids:\nWe flip the square along the slanty diagonal.\nThen we flip each row like turning a page.\nNow it looks rotated!\n\n🧠 Mnemonics:\n\n\"Flip + Transpose\" → `matrix[:] = list(zip(*matrix[::-1]))`\n\n\"Turn inside out\" → Transpose first, reverse next\n\n\"In-place magic\" → Modify the same matrix"
+                },
+                {
+                    id: 2,
+                    title: "Spiral Matrix",
+                    description: "Given an m x n matrix, return all elements of the matrix in spiral order.",
+                    solution: `function spiralOrder(matrix) {
+    if (!matrix.length) return [];
+    
+    const result = [];
+    let top = 0;
+    let bottom = matrix.length - 1;
+    let left = 0;
+    let right = matrix[0].length - 1;
+    
+    while (top <= bottom && left <= right) {
+        // Traverse right
+        for (let i = left; i <= right; i++) {
+            result.push(matrix[top][i]);
+        }
+        top++;
+        
+        // Traverse down
+        for (let i = top; i <= bottom; i++) {
+            result.push(matrix[i][right]);
+        }
+        right--;
+        
+        // Traverse left (if we have rows left)
+        if (top <= bottom) {
+            for (let i = right; i >= left; i--) {
+                result.push(matrix[bottom][i]);
+            }
+            bottom--;
+        }
+        
+        // Traverse up (if we have columns left)
+        if (left <= right) {
+            for (let i = bottom; i >= top; i--) {
+                result.push(matrix[i][left]);
+            }
+            left++;
+        }
+    }
+    
+    return result;
+}`,
+                    explanation: "✅ One-liner:\nPeel outer layers one by one in spiral order.\n\n👶 3-liner for kids:\nWe grab the top row, then go down the side.\nThen we go backwards along the bottom, then up.\nRepeat this spiral till everything's picked.\n\n🧠 Mnemonics:\n\n\"Peel & Rotate\" → `res += matrix.pop(0); matrix = list(zip(*matrix))[::-1]`\n\n\"Right-Down-Left-Up\" → Classic spiral movement\n\n\"Shrink the box\" → Matrix gets smaller every loop"
+                },
+                {
+                    id: 3,
+                    title: "Set Matrix Zeroes",
+                    description: "Given an m x n integer matrix, if an element is 0, set its entire row and column to 0's.",
+                    solution: `function setZeroes(matrix) {
+    const m = matrix.length;
+    const n = matrix[0].length;
+    let firstRowZero = false;
+    
+    // Use first row and column as markers
+    // Check first row
+    for (let j = 0; j < n; j++) {
+        if (matrix[0][j] === 0) {
+            firstRowZero = true;
+            break;
+        }
+    }
+    
+    // Check the rest and mark in first row and column
+    for (let i = 1; i < m; i++) {
+        for (let j = 0; j < n; j++) {
+            if (matrix[i][j] === 0) {
+                matrix[i][0] = 0;
+                matrix[0][j] = 0;
+            }
+        }
+    }
+    
+    // Set zeros for rows and columns based on markers (skip first row)
+    for (let i = 1; i < m; i++) {
+        if (matrix[i][0] === 0) {
+            for (let j = 0; j < n; j++) {
+                matrix[i][j] = 0;
+            }
+        }
+    }
+    
+    // Set zeros for columns based on markers
+    for (let j = 0; j < n; j++) {
+        if (matrix[0][j] === 0) {
+            for (let i = 0; i < m; i++) {
+                matrix[i][j] = 0;
+            }
+        }
+    }
+    
+    // Set zeros for first row if needed
+    if (firstRowZero) {
+        for (let j = 0; j < n; j++) {
+            matrix[0][j] = 0;
+        }
+    }
+}`,
+                    explanation: "✅ One-liner:\nUse first row and column to mark zeros to be set later.\n\n👶 3-liner for kids:\nIf something is zero, we remember its row and column.\nWe use the first row and column as sticky notes.\nLater we turn whole rows and columns to zeros.\n\n🧠 Mnemonics:\n\n\"Mark for zero\" → `matrix[i][0] = matrix[0][j] = 0`\n\n\"First row/col = hint board\"\n\n\"Wipe after scan\" → Do changes only after scanning"
+                },
+                {
+                    id: 4,
+                    title: "Happy Number",
+                    description: "Write an algorithm to determine if a number n is happy. A happy number is a number where the sum of the square of its digits eventually equals 1.",
+                    solution: `function isHappy(n) {
+    // Use fast and slow pointers to detect cycle (Floyd's Cycle-Finding Algorithm)
+    let slow = n;
+    let fast = getNext(n);
+    
+    while (fast !== 1 && slow !== fast) {
+        slow = getNext(slow);
+        fast = getNext(getNext(fast));
+    }
+    
+    return fast === 1;
+}
+
+function getNext(n) {
+    let sum = 0;
+    while (n > 0) {
+        const digit = n % 10;
+        sum += digit * digit;
+        n = Math.floor(n / 10);
+    }
+    return sum;
+}`,
+                    explanation: "✅ One-liner:\nLoop sum of squares of digits until 1 or repeat.\n\n👶 3-liner for kids:\nWe square and add each digit.\nIf we reach 1, it's a happy number!\nIf we loop, it's stuck and unhappy.\n\n🧠 Mnemonics:\n\n\"Sum of digit squares\" → `n = sum(int(c)**2 for c in str(n))`\n\n\"Loop with memory\" → `seen = set()`\n\n\"Stop at 1 or cycle\" → `while n != 1 and n not in seen: ...`"
+                }
+            ]
+        };
+        
+        // Function to render topics
+        function renderTopics() {
+            const topicGrid = document.getElementById('topic-grid');
+            topicGrid.innerHTML = '';
+            
+            topics.forEach(topic => {
+                const card = document.createElement('div');
+                card.className = 'topic-card';
+                card.setAttribute('data-id', topic.id);
+                
+                const statusClass = topic.problemCount > 0 ? 'status-available' : '';
+                const statusText = topic.problemCount > 0 
+                    ? `${topic.problemCount} problem${topic.problemCount > 1 ? 's' : ''}`
+                    : 'Coming soon';
+                
+                card.innerHTML = `
+                    <div class="topic-title">${topic.title}</div>
+                    <div class="topic-status ${statusClass}">${statusText}</div>
+                `;
+                
+                topicGrid.appendChild(card);
+                
+                // Add click event only if problems are available
+                if (topic.problemCount > 0) {
+                    card.addEventListener('click', function() {
+                        loadFlashcards(topic.id, topic.title);
+                    });
+                }
+            });
+        }
+        
+        // Function to load flashcards for a specific topic
+        function loadFlashcards(topicId, topicTitle) {
+            const container = document.querySelector('.container');
+            container.innerHTML = '<div class="loading">Loading flashcards for ' + topicTitle + '...</div>';
+            
+            // Simulate loading delay
+            setTimeout(() => {
+                const flashcards = allFlashcards[topicId] || [];
+                renderFlashcards(flashcards, topicTitle);
+            }, 500);
+        }
+        
+        // Function to render flashcards
+        function renderFlashcards(flashcards, topicTitle) {
+            const container = document.querySelector('.container');
+            
+            if (flashcards.length === 0) {
+                container.innerHTML = `
+                    <div class="flashcards-header">
+                        <button id="back-button">← Back to topics</button>
+                        <h2>${topicTitle} Flashcards</h2>
+                    </div>
+                    <div class="no-flashcards">No flashcards available for this topic yet.</div>
+                `;
+                document.getElementById('back-button').addEventListener('click', resetToTopics);
+                return;
+            }
+            
+            let html = `
+                <div class="flashcards-header">
+                    <button id="back-button">← Back to topics</button>
+                    <h2>${topicTitle} Flashcards</h2>
+                </div>
+                <div class="flashcards-container">
+                    <div class="flashcard-navigation">
+                        <button id="prev-card" disabled>Previous</button>
+                        <span id="card-counter">Card 1 of ${flashcards.length}</span>
+                        <button id="next-card" ${flashcards.length > 1 ? '' : 'disabled'}>Next</button>
+                    </div>
+                    <div class="flashcard-deck">
+            `;
+            
+            flashcards.forEach((card, index) => {
+                // Ensure code is properly escaped for HTML
+                const formattedSolution = card.solution.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const formattedExplanation = card.explanation.replace(/\n/g, '<br>');
+                
+                html += `
+                    <div class="flashcard ${index === 0 ? 'active' : ''}" data-index="${index}">
+                        <div class="flashcard-inner">
+                            <div class="flashcard-front">
+                                <h3>${card.title}</h3>
+                                <div class="problem-description">${card.description}</div>
+                            </div>
+                            <div class="flashcard-back">
+                                <h4>Solution:</h4>
+                                <pre class="solution-code">${formattedSolution}</pre>
+                                <div class="explanation">${formattedExplanation}</div>
+                            </div>
+                        </div>
+                        <button class="flip-button">Flip Card</button>
+                    </div>
+                `;
+            });
+            
+            html += `
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+            
+            // Add event handlers
+            document.getElementById('back-button').addEventListener('click', resetToTopics);
+            
+            // Add flip functionality
+            document.querySelectorAll('.flip-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const card = this.closest('.flashcard');
+                    card.classList.toggle('flipped');
+                    this.textContent = card.classList.contains('flipped') ? 'Show Problem' : 'Flip Card';
+                });
+            });
+            
+            // Add navigation functionality
+            if (flashcards.length > 1) {
+                const prevButton = document.getElementById('prev-card');
+                const nextButton = document.getElementById('next-card');
+                const cardCounter = document.getElementById('card-counter');
+                let currentCardIndex = 0;
+                
+                prevButton.addEventListener('click', function() {
+                    if (currentCardIndex > 0) {
+                        document.querySelector(`.flashcard[data-index="${currentCardIndex}"]`).classList.remove('active');
+                        currentCardIndex--;
+                        const currentCard = document.querySelector(`.flashcard[data-index="${currentCardIndex}"]`);
+                        currentCard.classList.remove('flipped');
+                        currentCard.classList.add('active');
+                        currentCard.querySelector('.flip-button').textContent = 'Flip Card';
+                        
+                        cardCounter.textContent = `Card ${currentCardIndex + 1} of ${flashcards.length}`;
+                        nextButton.disabled = false;
+                        
+                        if (currentCardIndex === 0) {
+                            prevButton.disabled = true;
+                        }
+                    }
+                });
+                
+                nextButton.addEventListener('click', function() {
+                    if (currentCardIndex < flashcards.length - 1) {
+                        document.querySelector(`.flashcard[data-index="${currentCardIndex}"]`).classList.remove('active');
+                        currentCardIndex++;
+                        const currentCard = document.querySelector(`.flashcard[data-index="${currentCardIndex}"]`);
+                        currentCard.classList.remove('flipped');
+                        currentCard.classList.add('active');
+                        currentCard.querySelector('.flip-button').textContent = 'Flip Card';
+                        
+                        cardCounter.textContent = `Card ${currentCardIndex + 1} of ${flashcards.length}`;
+                        prevButton.disabled = false;
+                        
+                        if (currentCardIndex === flashcards.length - 1) {
+                            nextButton.disabled = true;
+                        }
+                    }
+                });
+            }
+        }
+        
+        // Function to reset to topics view
+        function resetToTopics() {
+            const container = document.querySelector('.container');
+            container.innerHTML = `
+                <div class="topic-selection">
+                    <h2>Select a Topic</h2>
+                </div>
+                <div class="topic-grid" id="topic-grid">
+                    <div class="loading">Loading topics...</div>
+                </div>
+            `;
+            
+            // Small delay for loading effect
+            setTimeout(renderTopics, 300);
+        }
+        
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            renderTopics();
+        });
+    </script>                {
+                    id: 2,
+                    title: "Longest Substring Without Repeating Characters",
+                    description: "Find the length of the longest substring without repeating characters.",
+                    solution: `function lengthOfLongestSubstring(s) {
+    let charMap = new Map();
+    let left = 0;
+    let maxLength = 0;
+    
+    for (let right = 0; right < s.length; right++) {
+        if (charMap.has(s[right])) {
+            left = Math.max(left, charMap.get(s[right]) + 1);
+        }
+        charMap.set(s[right], right);
+        maxLength = Math.max(maxLength, right - left + 1);
+    }
+    
+    return maxLength;
+}`,
+                    explanation: "Time Complexity: O(N)\nSpace Complexity: O(min(N, 26))\n\n✅ One-liner:\nUse a sliding window and a set/map to track characters.\n\n👶 3-liner for kids:\nWe move across the string, adding each new letter.\nIf we see a repeat, we shrink the start of the window.\nWe keep track of the longest clean stretch.\n\n🧠 Mnemonics:\n\n\"Check char in map\" → if s[r] in seen: l = max(l, seen[s[r]] + 1)\n\n\"Store index\" → seen[s[r]] = r\n\n\"Track max length\" → res = max(res, r - l + 1)"
+                },
+                {
+                    id: 3,
+                    title: "Longest Repeating Character Replacement",
+                    description: "Find the length of the longest substring with at most k character replacements.",
+                    solution: `function characterReplacement(s, k) {
+    let charCount = new Array(26).fill(0);
+    let maxCount = 0;
+    let left = 0;
+    let maxLength = 0;
+    
+    for (let right = 0; right < s.length; right++) {
+        const charIndex = s.charCodeAt(right) - 'A'.charCodeAt(0);
+        charCount[charIndex]++;
+        maxCount = Math.max(maxCount, charCount[charIndex]);
+        
+        // If the window has more than k replacements needed, shrink it
+        if (right - left + 1 - maxCount > k) {
+            const leftCharIndex = s.charCodeAt(left) - 'A'.charCodeAt(0);
+            charCount[leftCharIndex]--;
+            left++;
+        }
+        
+        maxLength = Math.max(maxLength, right - left + 1);
+    }
+    
+    return maxLength;
+}`,
+                    explanation: "Time Complexity: O(N)\nSpace Complexity: O(26)\n\n✅ One-liner:\nUse sliding window; replace excess characters beyond the most frequent one.\n\n👶 3-liner for kids:\nWe build a window and count letters inside.\nWe make sure we don't replace more than k characters.\nIf we do, we shrink the window.\n\n🧠 Mnemonics:\n\n\"Track max freq\" → max_count = max(counts.values())\n\n\"Valid window?\" → if (right - left + 1) - max_count > k: shrink\n\n\"Update max\" → res = max(res, window length)"
+                }
+            ],
+            
+            // Tries
+            8: [
+                {
+                    id: 1,
+                    title: "Implement Trie (Prefix Tree)",
+                    description: "Implement a trie with insert, search, and startsWith methods.",
+                    solution: `class TrieNode {
+    constructor() {
+        this.children = {};
+        this.isEndOfWord = false;
+    }
+}
+
+class Trie {
+    constructor() {
+        this.root = new TrieNode();
+    }
+    
+    insert(word) {
+        let current = this.root;
+        
+        for (let char of word) {
+            if (!(char in current.children)) {
+                current.children[char] = new TrieNode();
+            }
+            current = current.children[char];
+        }
+        
+        current.isEndOfWord = true;
+    }
+    
+    search(word) {
+        const node = this._find(word);
+        return node !== null && node.isEndOfWord;
+    }
+    
+    startsWith(prefix) {
+        return this._find(prefix) !== null;
+    }
+    
+    _find(word) {
+        let current = this.root;
+        
+        for (let char of word) {
+            if (!(char in current.children)) {
+                return null;
+            }
+            current = current.children[char];
+        }
+        
+        return current;
+    }
+}`,
+                    explanation: "Time Complexity:\n- insert: O(L)\n- search: O(L)\n- startsWith: O(L)\nWhere L is the length of the word.\n\nSpace Complexity: O(N)\nWhere N is the total number of characters inserted.\n\n✅ One-liner: Use a nested dictionary where each node is a character map, ending with a special end marker.\n\n👶 3-liner for kids:\nWe build a tree where each letter has its own branch.\nWe follow each letter step by step when adding a word.\nA special symbol tells us when a word ends."
+                },
+                {
+                    id: 2,
+                    title: "Design Add and Search Words Data Structure",
+                    description: "Design a data structure that supports adding new words and searching for words, including with wildcard characters.",
+                    solution: `class WordDictionary {
+    constructor() {
+        this.root = {};
+    }
+    
+    addWord(word) {
+        let node = this.root;
+        for (let char of word) {
+            if (!(char in node)) {
+                node[char] = {};
+            }
+            node = node[char];
+        }
+        node['#'] = true; // End of word marker
+    }
+    
+    search(word) {
+        return this._dfs(this.root, word, 0);
+    }
+    
+    _dfs(node, word, index) {
+        if (index === word.length) {
+            return '#' in node;
+        }
+        
+        const char = word[index];
+        
+        if (char === '.') {
+            for (let key in node) {
+                if (key !== '#' && this._dfs(node[key], word, index + 1)) {
+                    return true;
+                }
+            }
+            return false;
+        } else {
+            return char in node && this._dfs(node[char], word, index + 1);
+        }
+    }
+}`,
+                    explanation: "Time Complexity:\n- addWord: O(L)\n- search: Worst case O(26^L) if all characters are '.'\nWhere L is the length of the word.\n\nSpace Complexity: O(N)\nWhere N is the total number of characters inserted.\n\n✅ One-liner: Extend Trie with DFS to handle wildcards ('.') during search.\n\n👶 3-liner for kids:\nWe store words in a special tree (Trie).\nWhen searching, we can use '.' to mean any letter.\nWe check all possible paths for matches."
+                },
+                {
+                    id: 3,
+                    title: "Word Search II",
+                    description: "Given an m x n board of characters and a list of strings words, return all words on the board. The words can be constructed from letters of sequentially adjacent cells, where adjacent cells are horizontally or vertically neighboring.",
+                    solution: `class TrieNode {
+    constructor() {
+        this.children = {};
+        this.word = null; // Store complete word at leaf nodes
+    }
+}
+
+function findWords(board, words) {
+    // Build Trie
+    const root = new TrieNode();
+    for (const word of words) {
+        let node = root;
+        for (const char of word) {
+            if (!(char in node.children)) {
+                node.children[char] = new TrieNode();
+            }
+            node = node.children[char];
+        }
+        node.word = word; // Store the word at the leaf
+    }
+    
+    const result = [];
+    const rows = board.length;
+    const cols = board[0].length;
+    
+    function dfs(r, c, node) {
+        // Check boundaries and if letter exists in current trie node
+        if (r < 0 || r >= rows || c < 0 || c >= cols || !(board[r][c] in node.children)) {
+            return;
+        }
+        
+        const char = board[r][c];
+        const nextNode = node.children[char];
+        
+        // Found a word
+        if (nextNode.word) {
+            result.push(nextNode.word);
+            nextNode.word = null; // Avoid duplicates
+        }
+        
+        // Mark cell as visited
+        board[r][c] = '#';
+        
+        // Explore all four directions
+        dfs(r + 1, c, nextNode);
+        dfs(r - 1, c, nextNode);
+        dfs(r, c + 1, nextNode);
+        dfs(r, c - 1, nextNode);
+        
+        // Restore the cell
+        board[r][c] = char;
+    }
+    
+    // Start DFS from each cell
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            dfs(r, c, root);
+        }
+    }
+    
+    return result;
+}`,
+                    explanation: "Time Complexity:\n- Building Trie: O(W * L)\n- DFS Search: O(M * N * 4^L)\nWhere M × N is board size, L is max word length, W is number of words\n\nSpace Complexity: O(W * L) for Trie + O(L) recursion depth\n\n✅ One-liner: Build a Trie of words, then DFS through board to match prefixes.\n\n👶 3-liner for kids:\nWe put all words into a search tree (Trie).\nThen we walk around the board letter by letter.\nIf we match a word path, we add it to our answers."
+                }
+            ],
+            
+            // 1-D Dynamic Programming
+            15: [
+                {
+                    id: 1,
+                    title: "Climbing Stairs",
+                    description: "Given n steps, you can climb 1 or 2 steps at a time. Find the number of distinct ways to reach the top.",
+                    solution: `function climbStairs(n) {
+    if (n <= 2) {
+        return n;
+    }
+    
+    let first = 1;
+    let second = 2;
+    
+    for (let i = 3; i <= n; i++) {
+        const temp = first + second;
+        first = second;
+        second = temp;
+    }
+    
+    return second;
+}`,
+                    explanation: "Time Complexity: O(n)\nSpace Complexity: O(1)\n\n✅ One-liner:\nUse Fibonacci-style bottom-up DP to count steps.\n\n👶 3-liner for kids:\nYou can climb 1 or 2 stairs at a time.\nCount how many ways to get to each stair.\nIt's like adding ways from two previous steps.\n\n🧠 Mnemonics:\n\n\"Fibonacci step\" → first, second = second, first + second\n\"Start base\" → first, second = 1, 2\n\"Return top\" → return second"
+                },
+                {
+                    id: 2,
+                    title: "Min Cost Climbing Stairs",
+                    description: "Given an array cost where cost[i] is the cost of the i-th step, find the minimum cost to reach the top.",
+                    solution: `function minCostClimbingStairs(cost) {
+    const n = cost.length;
+    let first = cost[0];
+    let second = cost[1];
+    
+    for (let i = 2; i < n; i++) {
+        const curr = cost[i] + Math.min(first, second);
+        first = second;
+        second = curr;
+    }
+    
+    return Math.min(first, second);
+}`,
+                    explanation: "Time Complexity: O(n)\nSpace Complexity: O(1)\n\n✅ One-liner:\nTrack min cost to reach each stair by choosing the cheaper path.\n\n👶 3-liner for kids:\nEvery stair has a price.\nYou can jump one or two ahead.\nAlways pay the cheaper way!\n\n🧠 Mnemonics:\n\n\"Take cheaper path\" → first, second = second, cost[i] + min(first, second)\n\"Start base\" → first, second = cost[0], cost[1]\n\"Choose last\" → return min(first, second)"
+                },
+                {
+                    id: 3,
+                    title: "House Robber",
+                    description: "Given an array nums representing the amount of money in each house, find the maximum amount you can rob without robbing adjacent houses.",
+                    solution: `function rob(nums) {
+    if (!nums.length) return 0;
+    if (nums.length === 1) return nums[0];
+    
+    let prevTwo = 0; // Max money after robbing houses [0...i-2]
+    let prevOne = 0; // Max money after robbing houses [0...i-1]
+    
+    for (const num of nums) {
+        const temp = prevOne;
+        prevOne = Math.max(prevOne, prevTwo + num);
+        prevTwo = temp;
+    }
+    
+    return prevOne;
+}`,
+                    explanation: "Time Complexity: O(n)\nSpace Complexity: O(1)\n\n✅ One-liner:\nUse DP to choose max between robbing current or skipping it.\n\n👶 3-liner for kids:\nCan't rob two houses in a row.\nEach time, choose: rob this or skip it.\nKeep track of best steal.\n\n🧠 Mnemonics:\n\n\"Rob or skip\" → first, second = second, max(second, first + num)\n\"Track rolling max\" → first, second = 0, 0\n\"Final loot\" → return second"
+                },
+                {
+                    id: 4,
+                    title: "House Robber II",
+                    description: "Similar to House Robber, but houses are arranged in a circle. Find the maximum amount you can rob without alerting the police.",
+                    solution: `function rob(nums) {
+    if (nums.length === 1) return nums[0];
+    
+    // Rob houses from 0 to n-2 (excluding the last house)
+    const rob1 = robLinear(nums.slice(0, nums.length - 1));
+    
+    // Rob houses from 1 to n-1 (excluding the first house)
+    const rob2 = robLinear(nums.slice(1));
+    
+    return Math.max(rob1, rob2);
+}
+
+function robLinear(nums) {
+    if (!nums.length) return 0;
+    if (nums.length === 1) return nums[0];
+    
+    let prevTwo = 0;
+    let prevOne = 0;
+    
+    for (const num of nums) {
+        const temp = prevOne;
+        prevOne = Math.max(prevOne, prevTwo + num);
+        prevTwo = temp;
+    }
+    
+    return prevOne;
+}`,
+                    explanation: "Time Complexity: O(n)\nSpace Complexity: O(1)\n\n✅ One-liner:\nRun house robber on both circle-split paths and return the best.\n\n👶 3-liner for kids:\nFirst and last houses are neighbors.\nSo rob from 0 to n-2 or from 1 to n-1.\nTake the better of the two!\n\n🧠 Mnemonics:\n\n\"Rob linearly\" → rob_linear(nums[:-1]), rob_linear(nums[1:])\n\"Rolling max again\" → first, second = second, max(second, first + num)\n\"Return max plan\" → return max(...)"
+                },
+                {
+                    id: 5,
+                    title: "Longest Palindromic Substring",
+                    description: "Given a string s, find the longest palindromic substring in s.",
+                    solution: `function longestPalindrome(s) {
+    if (!s || s.length < 1) return "";
+    
+    let start = 0;
+    let maxLength = 1;
+    
+    function expandAroundCenter(left, right) {
+        while (left >= 0 && right < s.length && s[left] === s[right]) {
+            if (right - left + 1 > maxLength) {
+                maxLength = right - left + 1;
+                start = left;
+            }
+            left--;
+            right++;
+        }
+    }
+    
+    for (let i = 0; i < s.length; i++) {
+        // Expand for odd length palindromes
+        expandAroundCenter(i, i);
+        
+        // Expand for even length palindromes
+        expandAroundCenter(i, i + 1);
+    }
+    
+    return s.substring(start, start + maxLength);
+}`,
+                    explanation: "Time Complexity: O(n²)\nSpace Complexity: O(1)\n\n✅ One-liner:\nExpand around each center to find longest mirror substring.\n\n👶 3-liner for kids:\nA palindrome reads the same both ways.\nTry expanding around every letter.\nKeep the longest one you find!\n\n🧠 Mnemonics:\n\n\"Expand center\" → while s[left] == s[right]: left--, right++\n\"Two tries\" → expand(i, i), expand(i, i+1)\n\"Track longest\" → if len(temp) > len(longest): longest = temp"
+                },
+                {
+                    id: 6,
+                    title: "Palindromic Substrings",
+                    description: "Given a string s, count the number of palindromic substrings in it.",
+                    solution: `function countSubstrings(s) {
+    let count = 0;
+    
+    function expandAroundCenter(left, right) {
+        let count = 0;
+        while (left >= 0 && right < s.length && s[left] === s[right]) {
+            count++;
+            left--;
+            right++;
+        }
+        return count;
+    }
+    
+    for (let i = 0; i < s.length; i++) {
+        // Count palindromes with odd length
+        count += expandAroundCenter(i, i);
+        
+        // Count palindromes with even length
+        count += expandAroundCenter(i, i + 1);
+    }
+    
+    return count;
+}`,
+                    explanation: "Time Complexity: O(n²)\nSpace Complexity: O(1)\n\n✅ One-liner:\nCount all possible centers and expand to count mirrors.\n\n👶 3-liner for kids:\nCount how many palindromes live inside the word.\nTry every letter as the middle.\nAdd one each time you find one!\n\n🧠 Mnemonics:\n\n\"Center expand\" → while s[l] == s[r]: count += 1\n\"Two centers\" → expand(i, i), expand(i, i+1)\n\"Add up\" → count += ..."
+                },
+                {
+                    id: 7,
+                    title: "Decode Ways",
+                    description: "A message containing letters from A-Z is encoded to numbers using 'A' = 1, 'B' = 2, ..., 'Z' = 26. Given a string s, determine the number of ways to decode it.",
+                    solution: `function numDecodings(s) {
+    if (!s || s[0] === '0') return 0;
+    
+    const n = s.length;
+    const dp = new Array(n + 1).fill(0);
+    dp[0] = 1;
+    dp[1] = 1;
+    
+    for (let i = 2; i <= n; i++) {
+        // Check if current digit is valid (not '0')
+        if (s[i - 1] !== '0') {
+            dp[i] += dp[i - 1];
+        }
+        
+        // Check if current and previous digits form a valid number (10-26)
+        const twoDigit = parseInt(s.substring(i - 2, i));
+        if (twoDigit >= 10 && twoDigit <= 26) {
+            dp[i] += dp[i - 2];
+        }
+    }
+    
+    return dp[n];
+}`,
+                    explanation: "Time Complexity: O(n)\nSpace Complexity: O(n)\n\n✅ One-liner:\nDP counts ways to split string using valid '1'-'26' chunks.\n\n👶 3-liner for kids:\nEach number becomes a letter.\nCheck one or two digits at a time.\nCount how many messages you can make!\n\n🧠 Mnemonics:\n\n\"Single digit valid\" → if s[i-1] != '0': dp[i] += dp[i-1]\n\"Double digit valid\" → if '10' <= s[i-2:i] <= '26': dp[i] += dp[i-2]\n\"Return total\" → return dp[n]"
+                },
+                {
+                    id: 8,
+                    title: "Coin Change",
+                    description: "Given an array coins representing different coin denominations and an integer amount, find the fewest number of coins needed to make up that amount.",
+                    solution: `function coinChange(coins, amount) {
+    // Initialize dp array with amount + 1 (which is greater than any valid answer)
+    const dp = new Array(amount + 1).fill(amount + 1);
+    dp[0] = 0;
+    
+    for (const coin of coins) {
+        for (let i = coin; i <= amount; i++) {
+            dp[i] = Math.min(dp[i], dp[i - coin] + 1);
+        }
+    }
+    
+    return dp[amount] > amount ? -1 : dp[amount];
+}`,
+                    explanation: "Time Complexity: O(n × m)\nSpace Complexity: O(n)\n\n✅ One-liner:\nBottom-up DP to find min coins needed for each amount.\n\n👶 3-liner for kids:\nYou need change for an amount.\nTry every coin for every total.\nKeep the smallest number of coins!\n\n🧠 Mnemonics:\n\n\"Try each coin\" → dp[x] = min(dp[x], dp[x - coin] + 1)\n\"Init DP table\" → dp = [inf] * (amount + 1); dp[0] = 0\n\"Return answer\" → return dp[amount] if dp[amount] != inf else -1"
+                }
+            ],
+            
+            // Intervals
+            11: [
+                {
+                    id: 1,
+                    title: "Insert Interval",
+                    description: "Given a set of non-overlapping intervals sorted by their start times, insert a new interval into the set, merging if necessary.",
+                    solution: `function insert(intervals, newInterval) {
+    const result = [];
+    let i = 0;
+    const n = intervals.length;
+
+    // Add all intervals ending before newInterval starts
+    while (i < n && intervals[i][1] < newInterval[0]) {
+        result.push(intervals[i]);
+        i++;
+    }
+
+    // Merge overlapping intervals
+    while (i < n && intervals[i][0] <= newInterval[1]) {
+        newInterval[0] = Math.min(newInterval[0], intervals[i][0]);
+        newInterval[1] = Math.max(newInterval[1], intervals[i][1]);
+        i++;
+    }
+    result.push(newInterval);
+
+    // Add remaining intervals
+    while (i < n) {
+        result.push(intervals[i]);
+        i++;
+    }
+
+    return result;
+}`,
+                    explanation: "Time Complexity: O(n)\nSpace Complexity: O(n)\n\n✅ One-liner:\nScan and merge intervals while inserting the new one in the correct place.\n\n👶 3-liner for kids:\nCheck which intervals come before the new one.\nThen merge the ones that overlap with it.\nAfter that, just add what's left!\n\n🧠 Mnemonics:\n\n\"Add before\" → while i < n and intervals[i][1] < newInterval[0]: result.append(intervals[i])\n\"Merge overlap\" → newInterval[0] = min(newInterval[0], intervals[i][0])\n\"Add remaining\" → while i < n: result.append(intervals[i])"
+                },
+                {
+                    id: 2,
+                    title: "Merge Intervals",
+                    description: "Given a collection of intervals, merge all overlapping intervals.",
+                    solution: `function merge(intervals) {
+    if (!intervals.length) return [];
+
+    // Sort intervals based on the start time
+    intervals.sort((a, b) => a[0] - b[0]);
+    const merged = [intervals[0]];
+
+    for (let i = 1; i < intervals.length; i++) {
+        const current = intervals[i];
+        const prev = merged[merged.length - 1];
+        
+        if (current[0] <= prev[1]) {  // Overlapping intervals
+            prev[1] = Math.max(prev[1], current[1]);
+        } else {
+            merged.push(current);
+        }
+    }
+
+    return merged;
+}`,
+                    explanation: "Time Complexity: O(n log n)\nSpace Complexity: O(n)\n\n✅ One-liner:\nSort intervals and merge overlapping ones into bigger blocks.\n\n👶 3-liner for kids:\nSort your blocks by when they start.\nIf two blocks touch or overlap, combine them.\nKeep adding non-overlapping ones!\n\n🧠 Mnemonics:\n\n\"Sort by start\" → intervals.sort(key=lambda x: x[0])\n\"Merge check\" → if current[0] <= prev[1]: prev[1] = max(prev[1], current[1])\n\"New block\" → else: merged.append(current)"
+                },
+                {
+                    id: 3,
+                    title: "Non-Overlapping Intervals",
+                    description: "Given a set of intervals, find the minimum number of intervals you need to remove to make the rest of the intervals non-overlapping.",
+                    solution: `function eraseOverlapIntervals(intervals) {
+    if (!intervals.length) return 0;
+
+    // Sort intervals based on the end time
+    intervals.sort((a, b) => a[1] - b[1]);
+    
+    let count = 1; // Count of non-overlapping intervals
+    let end = intervals[0][1];
+
+    for (let i = 1; i < intervals.length; i++) {
+        if (intervals[i][0] >= end) {
+            count++;
+            end = intervals[i][1];
+        }
+    }
+
+    return intervals.length - count;
+}`,
+                    explanation: "Time Complexity: O(n log n)\nSpace Complexity: O(1)\n\n✅ One-liner:\nSort by end time and greedily keep non-overlapping intervals.\n\n👶 3-liner for kids:\nPick intervals that end the earliest.\nIf they don't bump into the next one, keep them.\nSubtract the number you kept from total.\n\n🧠 Mnemonics:\n\n\"Sort by end\" → intervals.sort(key=lambda x: x[1])\n\"Skip overlap\" → if intervals[i][0] >= end:\n\"Remove extras\" → return len(intervals) - count"
+                }
+            ],
+            
+            // Advanced Graphs
+            13: [
+                {
+                    id: 1,
+                    title: "Network Delay Time",
+                    description: "You are given a network of n nodes, labeled from 1 to n. You are also given times, a list of travel times as directed edges times[i] = (ui, vi, wi), where ui is the source node, vi is the target node, and wi is the time it takes for a signal to travel from source to target. We will send a signal from a given node k. Return the minimum time it takes for all the n nodes to receive the signal. If it is impossible for all the n nodes to receive the signal, return -1.",
+                    solution: `function networkDelayTime(times, n, k) {
+    // Create adjacency list
+    const graph = Array(n + 1).fill().map(() => []);
+    for (const [u, v, w] of times) {
+        graph[u].push([v, w]);
+    }
+    
+    // Distance array to track min time to reach each node
+    const dist = Array(n + 1).fill(Infinity);
+    dist[k] = 0;
+    
+    // Priority queue (min heap) to get node with smallest time
+    const minHeap = [[0, k]]; // [time, node]
+    
+    while (minHeap.length > 0) {
+        // Get the node with smallest time
+        minHeap.sort((a, b) => a[0] - b[0]);
+        const [time, node] = minHeap.shift();
+        
+        // Skip if we've found a better path
+        if (time > dist[node]) continue;
+        
+        // Explore neighbors
+        for (const [nei, weight] of graph[node]) {
+            const newTime = time + weight;
+            if (newTime < dist[nei]) {
+                dist[nei] = newTime;
+                minHeap.push([newTime, nei]);
+            }
+        }
+    }
+    
+    // Check if all nodes are reachable
+    let maxTime = 0;
+    for (let i = 1; i <= n; i++) {
+        if (dist[i] === Infinity) return -1;
+        maxTime = Math.max(maxTime, dist[i]);
+    }
+    
+    return maxTime;
+}`,
+                    explanation: "✅ One-liner:\nUse Dijkstra's algorithm to find shortest time to all nodes.\n\n👶 3-liner for kids:\nWe send a signal from one point.\nWe figure out how fast it can reach every other point.\nThe longest of those times is our answer.\n\n🧠 Mnemonics:\n\n\"Build graph\" → graph[u].append((v, w))\n\n\"Min-heap Dijkstra\" → heappop(heap) gives node with smallest time\n\n\"Update time\" → if new_time < dist[v]: update and push"
+                },
+                {
+                    id: 2,
+                    title: "Reconstruct Itinerary",
+                    description: "You are given a list of airline tickets where tickets[i] = [fromi, toi] represent the departure and the arrival airports of one flight. Reconstruct the itinerary in order and return it. All of the tickets belong to a man who departs from 'JFK', thus, the itinerary must begin with 'JFK'. If there are multiple valid itineraries, you should return the itinerary that has the smallest lexical order when read as a single string.",
+                    solution: `function findItinerary(tickets) {
+    // Build the graph (adjacency list)
+    const graph = {};
+    for (const [from, to] of tickets) {
+        if (!graph[from]) graph[from] = [];
+        graph[from].push(to);
+    }
+    
+    // Sort destinations in lexical order
+    for (const from in graph) {
+        graph[from].sort();
+    }
+    
+    const route = [];
+    
+    function dfs(airport) {
+        const destinations = graph[airport] || [];
+        while (destinations.length > <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeetCode Flashcards</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+        }
+        
+        header {
+            background-color: #1e2a3a;
+            color: white;
+            padding: 15px 0;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Topic selection styles */
+        .topic-selection {
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .topic-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .topic-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        
+        .topic-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .topic-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .topic-status {
+            color: #888;
+            font-size: 0.9em;
+        }
+        
+        .status-available {
+            color: #3498db;
+        }
+        
+        /* Flashcards styles */
+        .flashcards-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .flashcards-header h2 {
+            margin: 0 0 0 20px;
+            flex-grow: 1;
+        }
+        
+        #back-button {
+            background-color: #f0f2f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 8px 15px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        #back-button:hover {
+            background-color: #e4e6e8;
+        }
+        
+        .flashcards-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .flashcard-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .flashcard-navigation button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 15px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .flashcard-navigation button:hover:not([disabled]) {
+            background-color: #2980b9;
+        }
+        
+        .flashcard-navigation button[disabled] {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .flashcard-deck {
+            perspective: 1000px;
+            min-height: 400px;
+        }
+        
+        .flashcard {
+            display: none;
+            width: 100%;
+        }
+        
+        .flashcard.active {
+            display: block;
+        }
+        
+        .flashcard-inner {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+            border-radius: 8px;
+        }
+        
+        .flashcard.flipped .flashcard-inner {
+            transform: rotateY(180deg);
+        }
+        
+        .flashcard-front, .flashcard-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 8px;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        
+        .flashcard-front {
+            background-color: white;
+        }
+        
+        .flashcard-back {
+            background-color: #f8f9fa;
+            transform: rotateY(180deg);
+        }
+        
+        .problem-description {
+            margin-top: 20px;
+            line-height: 1.5;
+        }
+        
+        .solution-code {
+            background-color: #1e2a3a;
+            color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            margin: 15px 0;
+        }
+        
+        .explanation {
+            margin-top: 15px;
+            line-height: 1.5;
+        }
+        
+        .flip-button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+        
+        .flip-button:hover {
+            background-color: #2980b9;
+        }
+        
+        /* Loading and error states */
+        .loading, .error-message, .no-flashcards {
+            text-align: center;
+            padding: 40px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>LeetCode Flashcards</h1>
+    </header>
+    
+    <div class="container">
+        <div class="topic-selection">
+            <h2>Select a Topic</h2>
+        </div>
+        <div class="topic-grid" id="topic-grid">
+            <!-- Topics will be loaded here by JavaScript -->
+            <div class="loading">Loading topics...</div>
+        </div>
+    </div>
+    
+    <noscript>
+        <div style="padding: 20px; text-align: center; background-color: #f8d7da; color: #721c24; margin: 20px; border-radius: 8px;">
+            JavaScript is required to view the LeetCode Flashcards. Please enable JavaScript in your browser.
+        </div>
+    </noscript>
+    
+    <script>
+        // Define all the topics
+        const topics = [
+            { id: 1, title: "Arrays and Hashing", problemCount: 1 },
+            { id: 2, title: "Two Pointers", problemCount: 3 },
+            { id: 3, title: "Stack", problemCount: 3 },
+            { id: 4, title: "Binary Search", problemCount: 7 },  // New topic
+            { id: 5, title: "Sliding Window", problemCount: 3 },
+            { id: 6, title: "Linked List", problemCount: 0 },
+            { id: 7, title: "Trees", problemCount: 0 },
+            { id: 8, title: "Tries", problemCount: 3 },
+            { id: 9, title: "Backtracking", problemCount: 0 },
+            { id: 10, title: "Heap/Priority Queue", problemCount: 0 },
+            { id: 11, title: "Intervals", problemCount: 3 },
+            { id: 12, title: "Greedy", problemCount: 0 },
+            { id: 13, title: "Advanced Graphs", problemCount: 4 },
+            { id: 14, title: "Graphs", problemCount: 0 },
+            { id: 15, title: "1-D Dynamic Programming", problemCount: 8 },  // New topic
+            { id: 16, title: "2-D Dynamic Programming", problemCount: 0 },
+            { id: 17, title: "Bit Manipulation", problemCount: 0 },
+            { id: 18, title: "Math & Geometry", problemCount: 4 }
+        ];
+        
+        // Define all the flashcards
+        const allFlashcards = {
+            // Arrays and Hashing
+            1: [
+                {
+                    id: 1,
+                    title: "Two Sum",
+                    description: "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.",
+                    solution: `function twoSum(nums, target) {
+    const map = new Map();
+    for (let i = 0; i < nums.length; i++) {
+        const complement = target - nums[i];
+        if (map.has(complement)) {
+            return [map.get(complement), i];
+        }
+        map.set(nums[i], i);
+    }
+    return [];
+}`,
+                    explanation: "We use a hash map to store the values we've seen so far. For each number, we check if its complement (target - current number) exists in the map. If it does, we found our pair."
+                }
+            ],
+            
+            // Two Pointers
+            2: [
+                {
+                    id: 1,
+                    title: "Valid Palindrome",
+                    description: "Check if a given string is a palindrome, considering only alphanumeric characters and ignoring cases.",
+                    solution: `function isPalindrome(s) {
+    // Convert to lowercase and remove non-alphanumeric characters
+    s = s.toLowerCase().replace(/[^a-z0-9]/g, '');
+    
+    // Use two pointers to check from both ends
+    let left = 0;
+    let right = s.length - 1;
+    
+    while (left < right) {
+        if (s[left] !== s[right]) {
+            return false;
+        }
+        left++;
+        right--;
+    }
+    
+    return true;
+}`,
+                    explanation: "Time Complexity: O(N)\nSpace Complexity: O(1)\n\nWe use two pointers from both ends, skipping non-alphanumerics and comparing characters."
+                },
+                {
+                    id: 2,
+                    title: "Two Sum II - Input Array Is Sorted",
+                    description: "Find two numbers in a sorted array that add up to a target.",
+                    solution: `function twoSum(numbers, target) {
+    let left = 0;
+    let right = numbers.length - 1;
+    
+    while (left < right) {
+        const sum = numbers[left] + numbers[right];
+        
+        if (sum === target) {
+            return [left + 1, right + 1]; // 1-indexed array
+        }
+        
+        if (sum < target) {
+            left++;
+        } else {
+            right--;
+        }
+    }
+    
+    return [];
+}`,
+                    explanation: "Time Complexity: O(N)\nSpace Complexity: O(1)\n\nWe use two pointers from both ends and move based on the sum compared to the target."
+                },
+                {
+                    id: 3,
+                    title: "Container With Most Water",
+                    description: "Find two vertical lines that form a container with the maximum water storage.",
+                    solution: `function maxArea(height) {
+    let left = 0;
+    let right = height.length - 1;
+    let maxWater = 0;
+    
+    while (left < right) {
+        const width = right - left;
+        const h = Math.min(height[left], height[right]);
+        maxWater = Math.max(maxWater, width * h);
+        
+        if (height[left] < height[right]) {
+            left++;
+        } else {
+            right--;
+        }
+    }
+    
+    return maxWater;
+}`,
+                    explanation: "Time Complexity: O(N)\nSpace Complexity: O(1)\n\nWe use two pointers from both ends and calculate the area at each step, always moving the pointer with the smaller height."
+                }
+            ],
+            
+            // Stack
+            3: [
+                {
+                    id: 1,
+                    title: "Valid Parentheses",
+                    description: "Given a string containing only ()[]{}​, determine if it is valid.",
+                    solution: `function isValid(s) {
+    const stack = [];
+    const map = {
+        ')': '(',
+        '}': '{',
+        ']': '['
+    };
+    
+    for (let i = 0; i < s.length; i++) {
+        const char = s[i];
+        if (char in map) {
+            const topElement = stack.pop() || '#';
+            if (topElement !== map[char]) {
+                return false;
+            }
+        } else {
+            stack.push(char);
+        }
+    }
+    
+    return stack.length === 0;
+}`,
+                    explanation: "Time Complexity: O(N)\nSpace Complexity: O(N)\n\n✅ One-liner:\nUse a stack to match every closing bracket with the latest opening one.\n\n👶 3-liner for kids:\nOpen brackets go into a bag.\nIf you see a closer, match it with the last opener.\nIf the bag is empty at the end, it's valid!\n\n🧠 Mnemonics:\n\n\"Push opener\" → stack.append(char)\n\"Pop and match\" → top = stack.pop() if stack else '#'\n\"Check match\" → if mapping[char] != top: return False"
+                },
+                {
+                    id: 2,
+                    title: "Min Stack",
+                    description: "Design a stack that supports push, pop, top, and retrieving the minimum element in constant time.",
+                    solution: `class MinStack {
+    constructor() {
+        this.stack = [];
+        this.minStack = [];
+    }
+    
+    push(val) {
+        this.stack.push(val);
+        if (this.minStack.length === 0 || val <= this.minStack[this.minStack.length - 1]) {
+            this.minStack.push(val);
+        }
+    }
+    
+    pop() {
+        const popped = this.stack.pop();
+        if (popped === this.minStack[this.minStack.length - 1]) {
+            this.minStack.pop();
+        }
+        return popped;
+    }
+    
+    top() {
+        return this.stack[this.stack.length - 1];
+    }
+    
+    getMin() {
+        return this.minStack[this.minStack.length - 1];
+    }
+}`,
+                    explanation: "Time Complexity: O(1) for all operations\nSpace Complexity: O(N)\n\n✅ One-liner:\nKeep a second stack that always holds the current minimum.\n\n👶 3-liner for kids:\nOne stack is for real items.\nAnother stack is for the smallest so far.\nPeek the small stack to get the min anytime!\n\n🧠 Mnemonics:\n\n\"Push min\" → if not min_stack or val <= min_stack[-1]: min_stack.append(val)\n\"Pop min too\" → if popped == min_stack[-1]: min_stack.pop()\n\"Get min\" → return min_stack[-1]"
+                },
+                {
+                    id: 3,
+                    title: "Daily Temperatures",
+                    description: "Given an array of temperatures, return an array where ans[i] is the number of days until a warmer temperature.",
+                    solution: `function dailyTemperatures(temperatures) {
+    const n = temperatures.length;
+    const result = new Array(n).fill(0);
+    const stack = [];
+    
+    for (let i = 0; i < n; i++) {
+        while (stack.length > 0 && temperatures[i] > temperatures[stack[stack.length - 1]]) {
+            const idx = stack.pop();
+            result[idx] = i - idx;
+        }
+        stack.push(i);
+    }
+    
+    return result;
+}`,
+                    explanation: "Time Complexity: O(N)\nSpace Complexity: O(N)\n\n✅ One-liner:\nUse a monotonic stack to find the next warmer day.\n\n👶 3-liner for kids:\nKeep days in a stack until a warmer one shows up.\nThen pop and mark how long they waited.\nRepeat until all are checked.\n\n🧠 Mnemonics:\n\n\"Pop when warmer\" → while stack and temperatures[stack[-1]] < temp:\n\"Set wait days\" → res[idx] = i - idx\n\"Track index\" → stack.append(i)"
+                }
+            ],
+            
+            // Binary Search
+            4: [
+                {
+                    id: 1,
+                    title: "Binary Search",
+                    description: "Given a sorted array, return the index of target. If not found, return -1.",
+                    solution: `function binarySearch(nums, target) {
+    let left = 0;
+    let right = nums.length - 1;
+    
+    while (left <= right) {
+        const mid = Math.floor((left + right) / 2);
+        if (nums[mid] === target) {
+            return mid;
+        } else if (nums[mid] < target) {
+            left = mid + 1;
+        } else {
+            right = mid - 1;
+        }
+    }
+    
+    return -1;
+}`,
+                    explanation: "Time Complexity: O(log N)\nSpace Complexity: O(1)\n\n✅ One-liner:\nUse two pointers to repeatedly cut the search range in half.\n\n👶 3-liner for kids:\nWe look in the middle of the list.\nIf it's not the number, we search only the left or right part.\nWe do this again and again until we find it or run out.\n\n🧠 Mnemonics:\n\n\"Set range\" → low, high = 0, len(nums) - 1\n\n\"Check mid\" → mid = (low + high) // 2\n\n\"Narrow search\" → if nums[mid] < target: low = mid + 1 else: high = mid - 1"
+                },
+                {
+                    id: 2,
+                    title: "Search a 2D Matrix",
+                    description: "Given an m x n matrix where rows and columns are sorted, search for a target value.",
+                    solution: `function searchMatrix(matrix, target) {
+    if (!matrix.length || !matrix[0].length) {
+        return false;
+    }
+    
+    const rows = matrix.length;
+    const cols = matrix[0].length;
+    let left = 0;
+    let right = rows * cols - 1;
+    
+    while (left <= right) {
+        const mid = Math.floor((left + right) / 2);
+        const midValue = matrix[Math.floor(mid / cols)][mid % cols];
+        
+        if (midValue === target) {
+            return true;
+        } else if (midValue < target) {
+            left = mid + 1;
+        } else {
+            right = mid - 1;
+        }
+    }
+    
+    return false;
+}`,
+                    explanation: "Time Complexity: O(log(m×n))\nSpace Complexity: O(1)\n\n✅ One-liner:\nTreat the 2D matrix like a 1D array and use binary search.\n\n👶 3-liner for kids:\nWe pretend the grid is just one long list.\nWe use binary search on that list.\nWe change the middle number back to row and column to check it.\n\n🧠 Mnemonics:\n\n\"Convert index\" → row = mid // cols; col = mid % cols\n\n\"Compare mid\" → if matrix[row][col] == target: return True\n\n\"Adjust range\" → low = mid + 1 or high = mid - 1"
+                },
+                {
+                    id: 3,
+                    title: "Koko Eating Bananas",
+                    description: "Find the minimum eating speed k such that Koko can eat all bananas within h hours.",
+                    solution: `function minEatingSpeed(piles, h) {
+    let left = 1;
+    let right = Math.max(...piles);
+    
+    while (left < right) {
+        const mid = Math.floor((left + right) / 2);
+        if (canFinish(piles, mid, h)) {
+            right = mid;
+        } else {
+            left = mid + 1;
+        }
+    }
+    
+    return left;
+}
+
+function canFinish(piles, speed, h) {
+    let time = 0;
+    for (const pile of piles) {
+        time += Math.ceil(pile / speed);
+    }
+    return time <= h;
+}`,
+                    explanation: "Time Complexity: O(N log M) where M is max pile size\nSpace Complexity: O(1)\n\n✅ One-liner:\nBinary search the eating speed to find the minimum speed that finishes on time.\n\n👶 3-liner for kids:\nWe try different eating speeds.\nIf she can finish in time, we try slower ones.\nIf not, we try faster ones.\n\n🧠 Mnemonics:\n\n\"Search range\" → low, high = 1, max(piles)\n\n\"Check time\" → total_time = sum(ceil(pile / mid))\n\n\"Narrow search\" → if time <= h: try slower; else: go faster"
+                },
+                {
+                    id: 4,
+                    title: "Find Minimum in Rotated Sorted Array",
+                    description: "Find the minimum element in a rotated sorted array.",
+                    solution: `function findMin(nums) {
+    let left = 0;
+    let right = nums.length - 1;
+    
+    while (left < right) {
+        const mid = Math.floor((left + right) / 2);
+        if (nums[mid] > nums[right]) {
+            left = mid + 1;
+        } else {
+            right = mid;
+        }
+    }
+    
+    return nums[left];
+}`,
+                    explanation: "Time Complexity: O(log N)\nSpace Complexity: O(1)\n\n✅ One-liner:\nUse binary search to find the smallest element by comparing with the rightmost.\n\n👶 3-liner for kids:\nThe smallest number is in the rotated part.\nWe keep checking the middle and comparing to the end.\nWe move left or right depending on which side is sorted.\n\n🧠 Mnemonics:\n\n\"Mid vs right\" → if nums[mid] > nums[right]: search right\n\n\"Else search left\" → right = mid\n\n\"Result is nums[left]\" → return nums[left]"
+                },
+                {
+                    id: 5,
+                    title: "Search in Rotated Sorted Array",
+                    description: "Search for target in a rotated sorted array.",
+                    solution: `function search(nums, target) {
+    let left = 0;
+    let right = nums.length - 1;
+    
+    while (left <= right) {
+        const mid = Math.floor((left + right) / 2);
+        if (nums[mid] === target) {
+            return mid;
+        }
+        
+        if (nums[left] <= nums[mid]) {
+            if (nums[left] <= target && target < nums[mid]) {
+                right = mid - 1;
+            } else {
+                left = mid + 1;
+            }
+        } else {
+            if (nums[mid] < target && target <= nums[right]) {
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
+        }
+    }
+    
+    return -1;
+}`,
+                    explanation: "Time Complexity: O(log N)\nSpace Complexity: O(1)\n\n✅ One-liner:\nBinary search while checking which half is sorted and target range.\n\n👶 3-liner for kids:\nWe split the list in half each time.\nWe check which half is in order.\nThen we pick the side where the target can be.\n\n🧠 Mnemonics:\n\n\"Left sorted?\" → if nums[low] <= nums[mid]:\n\n\"Target in left?\" → if nums[low] <= target < nums[mid]: high = mid - 1\n\n\"Otherwise search right\" → low = mid + 1"
+                },
+                {
+                    id: 6,
+                    title: "Time-Based Key-Value Store",
+                    description: "Implement a key-value store that supports setting values with timestamps and retrieving the most recent value before a given timestamp.",
+                    solution: `class TimeMap {
+    constructor() {
+        this.store = new Map();
+    }
+    
+    set(key, value, timestamp) {
+        if (!this.store.has(key)) {
+            this.store.set(key, []);
+        }
+        this.store.get(key).push([timestamp, value]);
+    }
+    
+    get(key, timestamp) {
+        if (!this.store.has(key)) {
+            return "";
+        }
+        
+        const values = this.store.get(key);
+        let left = 0;
+        let right = values.length - 1;
+        
+        while (left <= right) {
+            const mid = Math.floor((left + right) / 2);
+            if (values[mid][0] === timestamp) {
+                return values[mid][1];
+            } else if (values[mid][0] < timestamp) {
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
+        }
+        
+        return right >= 0 ? values[right][1] : "";
+    }
+}`,
+                    explanation: "Time Complexity:\n- set: O(1)\n- get: O(log N)\nSpace Complexity: O(N)\n\n✅ One-liner:\nStore timestamped values in a list and binary search for the latest one <= target time.\n\n👶 3-liner for kids:\nWe save every version of a value with the time it was saved.\nWhen asked for a time, we look for the latest version at or before that time.\nWe do this using binary search.\n\n🧠 Mnemonics:\n\n\"Store as list\" → store[key].append((timestamp, value))\n\n\"Binary search timestamp\" → while low <= high: check mid time\n\n\"Return latest <= timestamp\" → res = value if time <= target"
+                },
+                {
+                    id: 7,
+                    title: "Median of Two Sorted Arrays",
+                    description: "Find the median of two sorted arrays.",
+                    solution: `function findMedianSortedArrays(nums1, nums2) {
+    // Ensure nums1 is the smaller array for efficiency
+    if (nums1.length > nums2.length) {
+        [nums1, nums2] = [nums2, nums1];
+    }
+    
+    const x = nums1.length;
+    const y = nums2.length;
+    let low = 0;
+    let high = x;
+    
+    while (low <= high) {
+        const partitionX = Math.floor((low + high) / 2);
+        const partitionY = Math.floor((x + y + 1) / 2) - partitionX;
+        
+        const maxX = partitionX === 0 ? Number.NEGATIVE_INFINITY : nums1[partitionX - 1];
+        const minX = partitionX === x ? Number.POSITIVE_INFINITY : nums1[partitionX];
+        
+        const maxY = partitionY === 0 ? Number.NEGATIVE_INFINITY : nums2[partitionY - 1];
+        const minY = partitionY === y ? Number.POSITIVE_INFINITY : nums2[partitionY];
+        
+        if (maxX <= minY && maxY <= minX) {
+            // We found the correct partition
+            if ((x + y) % 2 === 0) {
+                return (Math.max(maxX, maxY) + Math.min(minX, minY)) / 2;
+            } else {
+                return Math.max(maxX, maxY);
+            }
+        } else if (maxX > minY) {
+            high = partitionX - 1;
+        } else {
+            low = partitionX + 1;
+        }
+    }
+    
+    return 0; // Will not reach here if arrays are sorted
+}`,
+                    explanation: "Time Complexity: O(log min(N, M))\nSpace Complexity: O(1)\n\n✅ One-liner:\nUse binary search to partition both arrays such that left half ≤ right half.\n\n👶 3-liner for kids:\nWe cut both arrays in half in a smart way.\nWe want everything on the left half to be smaller than the right.\nWhen it's balanced, we take the middle numbers for the median.\n\n🧠 Mnemonics:\n\n\"Binary on smaller array\" → if len(A) > len(B): swap\n\n\"Partition and check\" → Aleft <= Bright and Bleft <= Aright\n\n\"Median calc\" → if total even: avg of max(left), min(right); else: max(left)"
+                }
+            ],
+            
+            // Sliding Window
+            5: [
+                {
+                    id: 1,
+                    title: "Best Time to Buy and Sell Stock",
+                    description: "Given an array where prices[i] is the price of a given stock on day i, find the maximum profit.",
+                    solution: `function maxProfit(prices) {
+    let minPrice = Number.POSITIVE_INFINITY;
+    let maxProfit = 0;
+    
+    for (let price of prices) {
+        minPrice = Math.min(minPrice, price);
+        maxProfit = Math.max(maxProfit, price - minPrice);
+    }
+    
+    return maxProfit;
+}`,
+                    explanation: "Time Complexity: O(N)\nSpace Complexity: O(1)\n\n✅ One-liner:\nTrack the minimum price so far and compute profit at each step.\n\n👶 3-liner for kids:\nWe watch the lowest price we've seen.\nThen we check how much we'd earn if we sold today.\nWe remember the best profit we ever found.\n\n🧠 Mnemonics:\n\n\"Track min\" → min_price = min(min_price, price)\n\n\"Check profit\" → profit = price - min_price\n\n\"Update best\" → max_profit = max(max_profit, profit)"
+                },
